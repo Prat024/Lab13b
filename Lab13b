@@ -1,0 +1,68 @@
+Lab 13b - Spark Programming in RDD
+
+1) Enter Spark shell
+
+cd /usr/lib/spark
+./bin/spark-shell
+
+2) Create input.txt file
+
+[cloudera@quickstart Desktop]$ cat > input.txt
+apple
+banana counter
+counter one two three
+three one
+five seven eight
+twenty one three five counter six
+one siz helga
+apple banana fiver
+
+3) Load input data into RDD
+
+scala> val inputFile = sc.textFile("/home/cloudera/Desktop/input.txt")
+
+# Output:
+inputFile: org.apache.spark.rdd.RDD[String] = /home/cloudera/Desktop/input.txt MapPartitionsRDD[1] at textFile at <console>:27
+
+4) Variable for tranformation for word count process
+
+scala> val wordcount = inputFile.flatMap(line=> line.split(" ")).map(word => (word,1)).reduceByKey(_+_);
+
+# Output:
+wordcount: org.apache.spark.rdd.RDD[(String, Int)] = ShuffledRDD[8] at reduceByKey at <console>:29
+
+5) Description of RDD and recursive dependencies
+
+scala> wordcount.toDebugString
+
+# Output:
+res0: String = 
+(1) ShuffledRDD[8] at reduceByKey at <console>:29 []
+ +-(1) MapPartitionsRDD[7] at map at <console>:29 []
+    |  MapPartitionsRDD[6] at flatMap at <console>:29 []
+    |  /user/cloudera/wordcount/input.txt MapPartitionsRDD[5] at textFile at <console>:27 []
+    |  /user/cloudera/wordcount/input.txt HadoopRDD[4] at textFile at <console>:27 []
+
+6) Make Persist this RDD for future cache
+
+scala> wordcount.cache()
+
+# Output:
+res1: wordcount.type = ShuffledRDD[8] at reduceByKey at <console>:29
+
+7) Give action by saving output to a named path
+
+wordcount.saveAsTextFile("/home/cloudera/Desktop/output")
+
+### 8) Verified In localhost:4040 browser and output files
+
+9) Remove block data from memory - free cache
+
+scala> wordcount.unpersist();
+
+# Output:
+res3: wordcount.type = ShuffledRDD[8] at reduceByKey at <console>:29
+
+
+
+
